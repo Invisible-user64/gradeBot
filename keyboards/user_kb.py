@@ -41,7 +41,7 @@ async def create_execute_targets_kb(tg_id):
             buttons.append([InlineKeyboardButton(text=button_text, callback_data=callback_data)])
             pass
 
-    buttons.append([InlineKeyboardButton(text="Назад", callback_data="back_to_targets")])
+    buttons.append([InlineKeyboardButton(text="Назад", callback_data="targets")])
 
     targets_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -54,13 +54,18 @@ async def create_description_target_kb(id):
     buttons = []
 
     if user.status:
-        button_text = f"Цель ещё не выполнена ❌"
+        button_text = f"❌ Цель ещё не выполнена"
     else:
-        button_text = f"Добился цели ✅"
+        button_text = f"✅ Добился цели"
     callback_data = f"click_target_{user.id}"
     buttons.append([InlineKeyboardButton(text=button_text, callback_data=callback_data)])
 
-    buttons.append([InlineKeyboardButton(text="Назад", callback_data="back_to_targets")])
+    buttons.append([InlineKeyboardButton(text="🗑️ Удалить цель", callback_data=f"delete_target_{id}")])
+
+    if user.status:
+        buttons.append([InlineKeyboardButton(text="Назад", callback_data="execute_targets")])
+    else:
+        buttons.append([InlineKeyboardButton(text="Назад", callback_data="targets")])
 
     targets_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
 

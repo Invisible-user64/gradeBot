@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 from keyboards.user_kb import main_kb, create_targets_kb, create_description_target_kb, create_execute_targets_kb
 
-from database.request import set_user, set_targets, return_userlist_by_id, change_target_status
+from database.request import set_user, set_targets, return_userlist_by_id, change_target_status, delete_target_by_id
 
 user = Router()
 
@@ -78,14 +78,7 @@ async def show_target(callback: CallbackQuery):
 async def show_execute_target(callback: CallbackQuery):
     tg_id = callback.from_user.id
     targets_kb = await create_execute_targets_kb(tg_id)
-    await callback.message.edit_text("Цели - это что-то очень важное и большое, поэтому этот раздел сделан для того, чтобы писать сюда то, что будет выполняться в течение долгого времени.", reply_markup=targets_kb)
-    await callback.answer("")
-
-@user.callback_query(F.data == "back_to_targets")
-async def back_to_targets(callback: CallbackQuery):
-    tg_id = callback.from_user.id
-    targets_kb = await create_targets_kb(tg_id)
-    await callback.message.edit_text("Цели - это что-то очень важное и большое, поэтому этот раздел сделан для того, чтобы писать сюда то, что будет выполняться в течение долгого времени.", reply_markup=targets_kb)
+    await callback.message.edit_text("Выполненные цели:", reply_markup=targets_kb)
     await callback.answer("")
 
 @user.callback_query(F.data.startswith("click_target_"))
@@ -103,4 +96,14 @@ async def change_status(callback: CallbackQuery):
     else:
         status_view = "Не выполнена ❌"
     await callback.message.edit_text(f"{title}\n\n{description}\nСтатус: {status_view}", reply_markup=description_target_kb)
+    await callback.answer("")
+
+@user.callback_query(F.data.startswith("delete_target_"))
+async def delete_terget(callback: CallbackQuery):
+    id = int(callback.data.split("_")[2])
+    await delete_target_by_id(id)
+    await callback.message.edit_text("Цель успешно удалена!")
+    tg_id = callback.from_user.id
+    targets_kb = await create_targets_kb(tg_id)
+    await callback.message.answer("Цели - это что-то очень важное и большое, поэтому этот раздел сделан для того, чтобы писать сюда то, что будет выполняться в течение долгого времени.", reply_markup=targets_kb)
     await callback.answer("")

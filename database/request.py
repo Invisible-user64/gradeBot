@@ -40,3 +40,8 @@ async def change_target_status(id): #Функция возвращает не л
 
         await session.commit()
 
+async def delete_target_by_id(id):
+    async with async_session() as session:
+        target = await session.scalar(select(Targets).where(Targets.id == id))
+        await session.delete(target)
+        await session.commit()
