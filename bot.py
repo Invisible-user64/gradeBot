@@ -8,11 +8,13 @@ from aiogram import Bot, Dispatcher
 
 from database.models import async_main
 from handlers.user import user # Импортируем роутер
+from handlers.targets import target
+from handlers.roadmaps import roadmap
 
 async def main():
     bot = Bot(token=os.getenv('TOKEN'))
     dp = Dispatcher()
-    dp.include_router(user) # Подключаем роутер
+    dp.include_routers(user, target, roadmap) # Подключаем роутер
     dp.startup.register(startup)
     await dp.start_polling(bot)
 

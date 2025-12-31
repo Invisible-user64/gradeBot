@@ -1,6 +1,6 @@
 from sqlalchemy import select, update, delete, desc
-
-from database.models import User, Targets, async_session
+from sqlalchemy.orm.attributes import flag_modified
+from database.models import User, Targets, Roadmaps, async_session
 
 async def set_user(tg_id):
     async with async_session() as session:
@@ -30,7 +30,7 @@ async def return_userlist_by_id(id): #Функция возвращает не �
         target = await session.scalar(select(Targets).where(Targets.id == id))
         return target
     
-async def change_target_status(id): #Функция возвращает не лист а объект Target, переимёнывать её себе дороже
+async def change_target_status(id): 
     async with async_session() as session:
         target = await session.scalar(select(Targets).where(Targets.id == id))
         if target.status:
@@ -45,3 +45,35 @@ async def delete_target_by_id(id):
         target = await session.scalar(select(Targets).where(Targets.id == id))
         await session.delete(target)
         await session.commit()
+
+async def set_roadmap(tg_id, title):
+    async with async_session() as session:
+        roadmap = Roadmaps(tg_id = tg_id,
+                           title = title,
+                           point = [])
+        session.add(roadmap)
+        await session.commit()
+
+async def return_roadmap_list(tg_id):
+    async with async_session() as session:
+        roadmap_list = await session.scalars(select(Roadmaps).where(Roadmaps.tg_id == tg_id).order_by(Roadmaps.id))
+        return roadmap_list
+    
+async def show_roadmap(id):
+    async with async_session() as session:
+        roadmap = await session.scalar(select(Roadmaps).where(Roadmaps.id == id))
+        return roadmap
+    
+async def create_point(id, title):
+    async with async_session() as session:
+        roadmap = await session.scalar(select(Roadmaps).where(Roadmaps.id == id))
+        new_point = {
+            "title": title,
+            "status": False
+        }
+        roadmap.point.append(new_point)
+
+        flag_modified(roadmap, "point")
+
+        await session.commit()
+

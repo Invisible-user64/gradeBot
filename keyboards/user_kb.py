@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from database.request import return_userlist, return_userlist_by_id
+from database.request import return_userlist, return_userlist_by_id, return_roadmap_list, show_roadmap
 
 main_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎯 Цели", callback_data="targets")],
                                                 [InlineKeyboardButton(text="🗺️ Roadmaps", callback_data="roadmaps")],
@@ -8,8 +8,6 @@ main_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎯
                                                 [InlineKeyboardButton(text="💼 Кворк", callback_data="kwork")],
                                                 [InlineKeyboardButton(text="💡 Подсказка для успеха", callback_data="prompt")]])
 
-targets_kb_test = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Создать цель", callback_data="create_target")],
-                                                   [InlineKeyboardButton(text="Назад", callback_data="back")]])
 
 async def create_targets_kb(tg_id):
     user_list = await return_userlist(tg_id=tg_id)
@@ -70,3 +68,43 @@ async def create_description_target_kb(id):
     targets_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
 
     return targets_kb
+
+async def create_roadmap_kb(tg_id):
+    roadmap_list = await return_roadmap_list(tg_id)
+
+    buttons = [[InlineKeyboardButton(text="Создать roadmap", callback_data="create_roadmap")]]
+
+    for roadmap in roadmap_list:
+        button_text = f"{roadmap.title}"
+        button_callback = f"roadmap_{roadmap.id}"
+        buttons.append({InlineKeyboardButton(text=button_text, callback_data=button_callback)})
+
+    buttons.append([InlineKeyboardButton(text="Назад", callback_data="back")])
+    
+    roadmap_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
+    return roadmap_kb
+
+async def create_show_roadmap_kb(id):
+    roadmap = await show_roadmap(id)
+    json_list = roadmap.point
+
+    buttons = []
+
+    for index, json in enumerate(json_list):
+        text = json["title"]
+        status = json["status"]
+        status_text = None
+        if status:
+            status_text = "✅"
+        else:
+            status_text = "❌"
+
+        buttons.append([InlineKeyboardButton(text=f"{text} {status_text}", callback_data=f"point_{index}")])
+
+    buttons.append([InlineKeyboardButton(text="Создать пункт", callback_data=f"create_point_{id}")])
+    buttons.append([InlineKeyboardButton(text="Назад", callback_data="roadmaps")])
+    show_roadmap_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    return show_roadmap_kb
+
+
