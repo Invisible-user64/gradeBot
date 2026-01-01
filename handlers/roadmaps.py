@@ -3,9 +3,9 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from keyboards.user_kb import create_roadmap_kb, create_show_roadmap_kb
+from keyboards.user_kb import create_roadmap_kb, create_show_roadmap_kb, create_point_kb
 
-from database.request import set_roadmap, show_roadmap, create_point
+from database.request import set_roadmap, show_roadmap, create_point, delete_roadmap_by_id, get_point, change_point_status, delete_point
 
 roadmap = Router()
 
@@ -52,7 +52,7 @@ class Point(StatesGroup):
 
 @roadmap.callback_query(F.data.startswith("create_point_"))
 async def create_one_point(callback: CallbackQuery, state: FSMContext):
-    id = callback.data.split("_")[2]
+    id = int(callback.data.split("_")[2])
     await state.set_state(Point.id)
     await state.update_data(id = id)
     await callback.message.answer("Введите заголовок для пункта:")
@@ -70,3 +70,48 @@ async def point_title(message: Message, state: FSMContext):
     title = roadmap.title
     show_roadmap_kb = await create_show_roadmap_kb(id)
     await message.answer(f"{title}", reply_markup=show_roadmap_kb)
+
+@roadmap.callback_query(F.data.startswith("delete_roadmap_"))
+async def delete_roadmap(callback: CallbackQuery):
+    id = int(callback.data.split("_")[2])
+    await delete_roadmap_by_id(id)
+    await callback.message.edit_text("Вы успешно удалили roadmap!")
+    tg_id = callback.from_user.id
+    roadmap_kb = await create_roadmap_kb(tg_id)
+    await callback.message.answer("Roadmaps - дорожные карты, или же то, чему вы хотите научиться подразбивая обучение на несколько элементов. Этот раздел нужен для объёмной информации.", reply_markup=roadmap_kb)
+    await callback.answer("")
+
+@roadmap.callback_query(F.data.startswith("point_"))
+async def show_point(callback: CallbackQuery):
+    callback_data = callback.data.split("_")
+    id = int(callback_data[1])
+    index = int(callback_data[2])
+    point = await get_point(id, index)
+    title = point["title"]
+    point_kb = await create_point_kb(id, index)
+
+    await callback.message.edit_text(title, reply_markup=point_kb)
+
+@roadmap.callback_query(F.data.startswith("change_point_"))
+async def change_point(callback: CallbackQuery):
+    callback_data = callback.data.split("_")
+    id = int(callback_data[2])
+    index = int(callback_data[3])
+    await change_point_status(id, index)
+    point = await get_point(id, index)
+    title = point["title"]
+    point_kb = await create_point_kb(id, index)
+
+    await callback.message.edit_text(title, reply_markup=point_kb)
+
+@roadmap.callback_query(F.data.startswith("delete_point_"))
+async def delete_point_in_roadmap(callback: CallbackQuery):
+    callback_data = callback.data.split("_")
+    id = int(callback_data[2])
+    index = int(callback_data[3])
+    await delete_point(id, index)
+    roadmap = await show_roadmap(id)
+    title = roadmap.title
+    show_roadmap_kb = await create_show_roadmap_kb(id)
+    await callback.message.edit_text(f"{title}", reply_markup=show_roadmap_kb)
+    await callback.answer("")

@@ -77,3 +77,29 @@ async def create_point(id, title):
 
         await session.commit()
 
+async def delete_roadmap_by_id(id):
+    async with async_session() as session:
+        roadmap = await session.scalar(select(Roadmaps).where(Roadmaps.id == id))
+        await session.delete(roadmap)
+        await session.commit()
+
+async def get_point(id, index):
+    async with async_session() as session:
+        roadmap = await session.scalar(select(Roadmaps).where(Roadmaps.id == id))
+        point = roadmap.point[index]
+        return point
+    
+async def change_point_status(id, index):
+    async with async_session() as session:
+        roadmap = await session.scalar(select(Roadmaps).where(Roadmaps.id == id))
+        roadmap.point[index]["status"] = not roadmap.point[index]["status"]
+        flag_modified(roadmap, "point")
+        session.add(roadmap)
+        await session.commit()
+    
+async def delete_point(id, index):
+    async with async_session() as session:
+        roadmap = await session.scalar(select(Roadmaps).where(Roadmaps.id == id))
+        del roadmap.point[index]
+        flag_modified(roadmap, "point")
+        await session.commit()

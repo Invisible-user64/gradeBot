@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from database.request import return_userlist, return_userlist_by_id, return_roadmap_list, show_roadmap
+from database.request import return_userlist, return_userlist_by_id, return_roadmap_list, show_roadmap, get_point
 
 main_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎯 Цели", callback_data="targets")],
                                                 [InlineKeyboardButton(text="🗺️ Roadmaps", callback_data="roadmaps")],
@@ -99,12 +99,31 @@ async def create_show_roadmap_kb(id):
         else:
             status_text = "❌"
 
-        buttons.append([InlineKeyboardButton(text=f"{text} {status_text}", callback_data=f"point_{index}")])
+        buttons.append([InlineKeyboardButton(text=f"{text} {status_text}", callback_data=f"point_{id}_{index}")])
 
     buttons.append([InlineKeyboardButton(text="Создать пункт", callback_data=f"create_point_{id}")])
+    buttons.append([InlineKeyboardButton(text="Удалить Roadmap", callback_data=f"delete_roadmap_{id}")])
     buttons.append([InlineKeyboardButton(text="Назад", callback_data="roadmaps")])
     show_roadmap_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
 
     return show_roadmap_kb
+
+async def create_point_kb(id, index):
+    point = await get_point(id, index)
+    status = point["status"]
+    status_text = None
+    buttons = []
+    if status:
+        status_text = "Пункт ещё не выполнен ❌"  
+    else:
+        status_text = "Выполнить ✅"
+    
+    buttons.append([InlineKeyboardButton(text=status_text, callback_data=f"change_point_{id}_{index}")])
+    buttons.append([InlineKeyboardButton(text="Удалить пункт", callback_data=f"delete_point_{id}_{index}")])
+    buttons.append([InlineKeyboardButton(text="Назад", callback_data=f"roadmap_{id}")])
+
+    point_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    return point_kb
 
 
